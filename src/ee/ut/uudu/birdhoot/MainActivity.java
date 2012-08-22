@@ -7,6 +7,7 @@ import twitter4j.TwitterException;
 import twitter4j.TwitterFactory;
 import twitter4j.auth.AccessToken;
 import twitter4j.auth.RequestToken;
+import twitter4j.conf.ConfigurationBuilder;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -14,7 +15,6 @@ import android.content.SharedPreferences.Editor;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.view.View;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.Toast;
@@ -37,14 +37,23 @@ public class MainActivity extends Activity {
     protected void onResume() {
         super.onResume();
         if (hasAccessToken()) {
+            if (twitter == null) {
+                SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+                ConfigurationBuilder b = new ConfigurationBuilder();
+                b.setOAuthConsumerKey(Util.CONSUMER_KEY);
+                b.setOAuthConsumerSecret(Util.CONSUMER_SECRET);
+                b.setOAuthAccessToken(prefs.getString(Util.ACCESS_TOKEN, null));
+                b.setOAuthAccessTokenSecret(prefs.getString(Util.ACCESS_TOKEN_SECRET, null));
+                twitter = new TwitterFactory(b.build()).getInstance();
+            }
             // Access has already been set.
-            Button buttonLogout = (Button)findViewById(R.id.button_logout);
+            Button buttonLogout = (Button) findViewById(R.id.button_logout);
             buttonLogout.setVisibility(View.VISIBLE);
+            Toast.makeText(this, "Access Token found..logged in", Toast.LENGTH_SHORT).show();
             
             // TODO: remove this.
             getTweetList();
-            
-            Toast.makeText(this, "Access Token found..logged in", Toast.LENGTH_SHORT).show();
+
         } else {
             // Need to acquire access token and secret.
             twitter = new TwitterFactory().getInstance();
@@ -108,26 +117,26 @@ public class MainActivity extends Activity {
         editor.commit();
         logoutButton.setVisibility(View.INVISIBLE);
     }
-    
+
     // TODO: get all tweets and show them in the list.
     private void getTweetList() {
         try {
-            ResponseList<Status> statusList = twitter.getUserTimeline();
-            ListView list =  (ListView)findViewById(R.id.list_tweets);
-            ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, R.layout.list_row_tweets);
-            for (Status status : statusList) {
-                adapter.add(status.getText());
-            }
+            // ResponseList<Status> statusList = twitter.getUserTimeline();
+            ResponseList<Status> statusList = twitter.getHomeTimeline();
+            
+            
+            
+            ListView list = (ListView) findViewById(R.id.list_tweets);
+            TweetArrayAdapter adapter = new TweetArrayAdapter(this, statusList);
             list.setAdapter(adapter);
 
-            
         } catch (TwitterException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
-        
+
     }
-    
+
     /**
      * Checks if access token and secret has been stored in preferences.
      * 
@@ -135,8 +144,42 @@ public class MainActivity extends Activity {
      */
     private boolean hasAccessToken() {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-        String accessToken = prefs.getString(Util.ACCESS_TOKEN_SECRET, null);
+        String accessToken = prefs.getString(Util.ACCESS_TOKEN, null);
         String accessSecret = prefs.getString(Util.ACCESS_TOKEN_SECRET, null);
         return accessToken != null && accessSecret != null;
+    }
+
+    /**
+     * TODO: check this, if it is working.
+     * @return Twitter instance.
+     */
+    private Twitter getTwitter() {
+        if (this.twitter != null)
+            return this.twitter;
+        if (hasAccessToken()) {
+            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+            ConfigurationBuilder b = new ConfigurationBuilder();
+            b.setOAuthConsumerKey(Util.CONSUMER_KEY);
+            b.setOAuthConsumerSecret(Util.CONSUMER_SECRET);
+            b.setOAuthAccessToken(prefs.getString(Util.ACCESS_TOKEN, null));
+            b.setOAuthAccessTokenSecret(prefs.getString(Util.ACCESS_TOKEN_SECRET, null));
+            return new TwitterFactory(b.build()).getInstance();
+        } else {
+            twitter = new TwitterFactory().getInstance();
+            RequestToken requestToken = null;
+            twitter.setOAuthConsumer(Util.CONSUMER_KEY, Util.CONSUMER_SECRET);
+            try {
+                Toast.makeText(this, "getting request token", Toast.LENGTH_SHORT).show();
+                requestToken = twitter.getOAuthRequestToken(Util.CALLBACK_URL);
+                Toast.makeText(this, "redirecting to web view", Toast.LENGTH_SHORT).show();
+                Intent intent = new Intent(this, LoginWebViewActivity.class);
+                intent.putExtra("URL", requestToken.getAuthenticationURL());
+                startActivityForResult(intent, REQUEST_CODE.AUTHORIZATION.ordinal());
+            } catch (TwitterException e) {
+                Toast.makeText(this, "FAIL: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                e.printStackTrace();
+            }
+        }
+        return null;
     }
 }
