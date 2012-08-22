@@ -14,6 +14,7 @@ import android.content.SharedPreferences.Editor;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.view.View;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.Toast;
@@ -39,6 +40,10 @@ public class MainActivity extends Activity {
             // Access has already been set.
             Button buttonLogout = (Button)findViewById(R.id.button_logout);
             buttonLogout.setVisibility(View.VISIBLE);
+            
+            // TODO: remove this.
+            getTweetList();
+            
             Toast.makeText(this, "Access Token found..logged in", Toast.LENGTH_SHORT).show();
         } else {
             // Need to acquire access token and secret.
@@ -109,6 +114,11 @@ public class MainActivity extends Activity {
         try {
             ResponseList<Status> statusList = twitter.getUserTimeline();
             ListView list =  (ListView)findViewById(R.id.list_tweets);
+            ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, R.layout.list_row_tweets);
+            for (Status status : statusList) {
+                adapter.add(status.getText());
+            }
+            list.setAdapter(adapter);
 
             
         } catch (TwitterException e) {
