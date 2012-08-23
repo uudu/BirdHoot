@@ -60,7 +60,7 @@ public class MainActivity extends FragmentActivity implements UpdateStatusDialog
             Toast.makeText(this, "Access Token found..logged in", Toast.LENGTH_SHORT).show();
 
             // TODO: remove this or not?.
-            getTweetList();
+            showHomeTimeline();
 
         } else {
             // Need to acquire access token and secret.
@@ -138,20 +138,16 @@ public class MainActivity extends FragmentActivity implements UpdateStatusDialog
         usdf.show(fm, "fragment_update_status");
     }
 
-    // TODO: get all tweets and show them in the list.
-    private void getTweetList() {
+    private void showHomeTimeline() {
         try {
             ResponseList<Status> statusList = twitter.getHomeTimeline();
-
             ListView list = (ListView) findViewById(R.id.list_tweets);
-            TweetArrayAdapter adapter = new TweetArrayAdapter(this, statusList);
-            list.setAdapter(adapter);
-
+            TweetArrayAdapter<Status> statusAdapter = new TweetArrayAdapter<Status>(this, statusList);
+            list.setAdapter(statusAdapter);
         } catch (TwitterException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
-
     }
 
     /**
@@ -225,7 +221,7 @@ public class MainActivity extends FragmentActivity implements UpdateStatusDialog
         if (!twitter4j.util.CharacterUtil.isExceedingLengthLimitation(tweet)) {
             twitter.updateStatus(tweet);
             // Refresh tweet list or add status on top of tweets list
-            getTweetList();
+            showHomeTimeline();
         }
     }
 
@@ -235,8 +231,10 @@ public class MainActivity extends FragmentActivity implements UpdateStatusDialog
         q.setQuery(text);
         QueryResult qr = twitter.search(q);
         List<Tweet> tweetList = qr.getTweets();
-        // TODO: show in list
-        
+        Toast.makeText(this, "results: " + tweetList.size(), Toast.LENGTH_LONG).show();
+        ListView list = (ListView) findViewById(R.id.list_tweets);
+        TweetArrayAdapter<Tweet> tweetAdapter = new TweetArrayAdapter<Tweet>(this, tweetList);
+        list.setAdapter(tweetAdapter);
     }
 
 }
