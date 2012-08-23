@@ -3,5 +3,10 @@
     <string name="app_name">BirdHoot</string>
     <string name="title_activity_main">BirdHoot</string>
     <string name="button_logout">Log out</string>
+    <string name="button_update_status">Crate Tweet!</string>
+    <string name="button_update_status_go">Tweet!</string>
+    <string name="title_update_status_dialog">Type your tweet</string>
+    <string name="title_search_tweets_dialog">Enter search string</string>
+    <string name="button_search_tweets">Search</string>
 
 </resources>

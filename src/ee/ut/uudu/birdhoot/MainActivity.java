@@ -1,7 +1,12 @@
 package ee.ut.uudu.birdhoot;
 
+import java.util.List;
+
+import twitter4j.Query;
+import twitter4j.QueryResult;
 import twitter4j.ResponseList;
 import twitter4j.Status;
+import twitter4j.Tweet;
 import twitter4j.Twitter;
 import twitter4j.TwitterException;
 import twitter4j.TwitterFactory;
@@ -14,12 +19,15 @@ import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.FragmentManager;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.Toast;
+import ee.ut.uudu.birdhoot.UpdateStatusDialogFragment.UpdateStatusDialogListener;
 
-public class MainActivity extends Activity {
+public class MainActivity extends FragmentActivity implements UpdateStatusDialogListener {
 
     public enum REQUEST_CODE {
         AUTHORIZATION
@@ -50,8 +58,8 @@ public class MainActivity extends Activity {
             Button buttonLogout = (Button) findViewById(R.id.button_logout);
             buttonLogout.setVisibility(View.VISIBLE);
             Toast.makeText(this, "Access Token found..logged in", Toast.LENGTH_SHORT).show();
-            
-            // TODO: remove this.
+
+            // TODO: remove this or not?.
             getTweetList();
 
         } else {
@@ -118,14 +126,23 @@ public class MainActivity extends Activity {
         logoutButton.setVisibility(View.INVISIBLE);
     }
 
+    public void onClickUpdateStatus(View tweetButton) {
+        FragmentManager fm = getSupportFragmentManager();
+        UpdateStatusDialogFragment usdf = UpdateStatusDialogFragment.newInstance(TextDialogRole.UPDATE_STATUS);
+        usdf.show(fm, "fragment_update_status");
+    }
+
+    public void onClickSearchTweets(View searchButton) {
+        FragmentManager fm = getSupportFragmentManager();
+        UpdateStatusDialogFragment usdf = UpdateStatusDialogFragment.newInstance(TextDialogRole.SEARCH_TWEETS);
+        usdf.show(fm, "fragment_update_status");
+    }
+
     // TODO: get all tweets and show them in the list.
     private void getTweetList() {
         try {
-            // ResponseList<Status> statusList = twitter.getUserTimeline();
             ResponseList<Status> statusList = twitter.getHomeTimeline();
-            
-            
-            
+
             ListView list = (ListView) findViewById(R.id.list_tweets);
             TweetArrayAdapter adapter = new TweetArrayAdapter(this, statusList);
             list.setAdapter(adapter);
@@ -151,6 +168,7 @@ public class MainActivity extends Activity {
 
     /**
      * TODO: check this, if it is working.
+     * 
      * @return Twitter instance.
      */
     private Twitter getTwitter() {
@@ -182,4 +200,43 @@ public class MainActivity extends Activity {
         }
         return null;
     }
+
+    @Override
+    public void onDialogTextEnter(String text, TextDialogRole role) {
+        try {
+            switch (role) {
+            case UPDATE_STATUS:
+                updateStatus(text);
+                break;
+            case SEARCH_TWEETS:
+                // TODO: Search tweets
+                searchTweets(text);
+                break;
+            }
+        } catch (TwitterException e) {
+            Toast.makeText(this, "FAIL: " + e.getMessage(), Toast.LENGTH_LONG).show();
+            e.printStackTrace();
+
+        }
+    }
+
+    private void updateStatus(String tweet) throws TwitterException {
+        Toast.makeText(this, "Tweeted: " + tweet, Toast.LENGTH_LONG).show();
+        if (!twitter4j.util.CharacterUtil.isExceedingLengthLimitation(tweet)) {
+            twitter.updateStatus(tweet);
+            // Refresh tweet list or add status on top of tweets list
+            getTweetList();
+        }
+    }
+
+    private void searchTweets(String text) throws TwitterException {
+        Toast.makeText(this, "search for: " + text, Toast.LENGTH_LONG).show();
+        Query q = new Query();
+        q.setQuery(text);
+        QueryResult qr = twitter.search(q);
+        List<Tweet> tweetList = qr.getTweets();
+        // TODO: show in list
+        
+    }
+
 }
