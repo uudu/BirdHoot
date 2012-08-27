@@ -71,12 +71,11 @@ public class UpdateStatusDialogFragment extends DialogFragment implements OnEdit
             case UPDATE_STATUS:
                 int length = CharacterUtil.count(text);
                 if (CharacterUtil.isExceedingLengthLimitation(text)) {
-                    Toast.makeText(getActivity(),
-                            "140 character limit exceeded, you need to drop " + (length - 140) + " characters",
-                            Toast.LENGTH_LONG).show();
+                    String message = getString(R.string.warn_tweet_length_exceeded, Integer.valueOf(length - 140));
+                    Toast.makeText(getActivity(), message, Toast.LENGTH_LONG).show();
                     return false;
                 } else if (length == 0) {
-                    Toast.makeText(getActivity(), "Zero lenght tweets not allowed", Toast.LENGTH_LONG).show();
+                    Toast.makeText(getActivity(), "Zero length tweets not allowed", Toast.LENGTH_LONG).show();
                     return false;
                 }
                 break;

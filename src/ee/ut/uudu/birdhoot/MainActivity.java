@@ -22,7 +22,6 @@ import android.preference.PreferenceManager;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.view.View;
-import android.widget.Button;
 import android.widget.ListView;
 import android.widget.Toast;
 import ee.ut.uudu.birdhoot.UpdateStatusDialogFragment.UpdateStatusDialogListener;
@@ -44,41 +43,30 @@ public class MainActivity extends FragmentActivity implements UpdateStatusDialog
     @Override
     protected void onResume() {
         super.onResume();
-        if (hasAccessToken()) {
-            if (twitter == null) {
-                SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-                ConfigurationBuilder b = new ConfigurationBuilder();
-                b.setOAuthConsumerKey(Util.CONSUMER_KEY);
-                b.setOAuthConsumerSecret(Util.CONSUMER_SECRET);
-                b.setOAuthAccessToken(prefs.getString(Util.ACCESS_TOKEN, null));
-                b.setOAuthAccessTokenSecret(prefs.getString(Util.ACCESS_TOKEN_SECRET, null));
-                twitter = new TwitterFactory(b.build()).getInstance();
-            }
-            // Access has already been set.
-            Button buttonLogout = (Button) findViewById(R.id.button_logout);
-            buttonLogout.setVisibility(View.VISIBLE);
-            Toast.makeText(this, "Access Token found..logged in", Toast.LENGTH_SHORT).show();
+        // User already has access token.
+        try {
 
-            // TODO: remove this or not?.
-            showHomeTimeline();
+            twitter = getTwitter();
 
-        } else {
-            // Need to acquire access token and secret.
-            twitter = new TwitterFactory().getInstance();
-            RequestToken requestToken = null;
-            twitter.setOAuthConsumer(Util.CONSUMER_KEY, Util.CONSUMER_SECRET);
-            try {
-                Toast.makeText(this, "getting request token", Toast.LENGTH_SHORT).show();
-                requestToken = twitter.getOAuthRequestToken(Util.CALLBACK_URL);
-                Toast.makeText(this, "redirecting to web view", Toast.LENGTH_SHORT).show();
+            if (hasAccessToken()) {
+                // Show log out button.
+                View buttonLogout = findViewById(R.id.button_logout);
+                buttonLogout.setVisibility(View.VISIBLE);
+                Toast.makeText(this, "Access Token found..logged in", Toast.LENGTH_SHORT).show();
+
+                // TODO: remove this or not?.
+                showHomeTimeline();
+
+            } else {
+                RequestToken requestToken = twitter.getOAuthRequestToken(Util.CALLBACK_URL);
                 Intent intent = new Intent(this, LoginWebViewActivity.class);
                 intent.putExtra("URL", requestToken.getAuthenticationURL());
                 startActivityForResult(intent, REQUEST_CODE.AUTHORIZATION.ordinal());
 
-            } catch (TwitterException e) {
-                Toast.makeText(this, "FAIL: " + e.getMessage(), Toast.LENGTH_LONG).show();
-                e.printStackTrace();
             }
+        } catch (TwitterException e) {
+            Toast.makeText(this, "FAIL: " + e.getMessage(), Toast.LENGTH_LONG).show();
+            e.printStackTrace();
         }
     }
 
@@ -90,21 +78,15 @@ public class MainActivity extends FragmentActivity implements UpdateStatusDialog
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == REQUEST_CODE.AUTHORIZATION.ordinal()) {
             if (resultCode == RESULT_OK) {
-                Toast.makeText(this, "Got verifier", Toast.LENGTH_SHORT).show();
-                String oauthVerifier = (String) data.getExtras().get("oauth_verifier");
-                Toast.makeText(this, "Verifier: " + oauthVerifier, Toast.LENGTH_LONG).show();
+                String oauthVerifier = (String) data.getExtras().get(LoginWebViewActivity.OAUTH_VERIFIER_KEY);
                 AccessToken at = null;
                 try {
                     // Get access token and secret
                     at = twitter.getOAuthAccessToken(oauthVerifier);
-                    SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
-                    // Store access token and secret
-                    SharedPreferences.Editor editor = settings.edit();
-                    editor.putString(Util.ACCESS_TOKEN, at.getToken());
-                    editor.putString(Util.ACCESS_TOKEN_SECRET, at.getTokenSecret());
-                    editor.commit();
+                    storeAccessToken(at);
                 } catch (TwitterException e) {
                     e.printStackTrace();
+                    Toast.makeText(this, "Getting access token failed!", Toast.LENGTH_LONG).show();
                 }
             } else if (requestCode == Activity.RESULT_CANCELED) {
                 Toast.makeText(this, "Credentials cancelled!", Toast.LENGTH_LONG).show();
@@ -132,22 +114,26 @@ public class MainActivity extends FragmentActivity implements UpdateStatusDialog
         usdf.show(fm, "fragment_update_status");
     }
 
+    public void onClickHome(View homeButton) {
+        try {
+            showHomeTimeline();
+        } catch (TwitterException e) {
+            Toast.makeText(this, "FAIL: " + e.getMessage(), Toast.LENGTH_LONG).show();
+            e.printStackTrace();
+        }
+    }
+
     public void onClickSearchTweets(View searchButton) {
         FragmentManager fm = getSupportFragmentManager();
         UpdateStatusDialogFragment usdf = UpdateStatusDialogFragment.newInstance(TextDialogRole.SEARCH_TWEETS);
         usdf.show(fm, "fragment_update_status");
     }
 
-    private void showHomeTimeline() {
-        try {
-            ResponseList<Status> statusList = twitter.getHomeTimeline();
-            ListView list = (ListView) findViewById(R.id.list_tweets);
-            TweetArrayAdapter<Status> statusAdapter = new TweetArrayAdapter<Status>(this, statusList);
-            list.setAdapter(statusAdapter);
-        } catch (TwitterException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
+    private void showHomeTimeline() throws TwitterException {
+        ResponseList<Status> statusList = twitter.getHomeTimeline();
+        ListView list = (ListView) findViewById(R.id.list_tweets);
+        TweetArrayAdapter<Status> statusAdapter = new TweetArrayAdapter<Status>(this, statusList);
+        list.setAdapter(statusAdapter);
     }
 
     /**
@@ -155,46 +141,11 @@ public class MainActivity extends FragmentActivity implements UpdateStatusDialog
      * 
      * @return true, if access token and secret is set.
      */
-    private boolean hasAccessToken() {
+    public boolean hasAccessToken() {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
         String accessToken = prefs.getString(Util.ACCESS_TOKEN, null);
         String accessSecret = prefs.getString(Util.ACCESS_TOKEN_SECRET, null);
         return accessToken != null && accessSecret != null;
-    }
-
-    /**
-     * TODO: check this, if it is working.
-     * 
-     * @return Twitter instance.
-     */
-    private Twitter getTwitter() {
-        if (this.twitter != null)
-            return this.twitter;
-        if (hasAccessToken()) {
-            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-            ConfigurationBuilder b = new ConfigurationBuilder();
-            b.setOAuthConsumerKey(Util.CONSUMER_KEY);
-            b.setOAuthConsumerSecret(Util.CONSUMER_SECRET);
-            b.setOAuthAccessToken(prefs.getString(Util.ACCESS_TOKEN, null));
-            b.setOAuthAccessTokenSecret(prefs.getString(Util.ACCESS_TOKEN_SECRET, null));
-            return new TwitterFactory(b.build()).getInstance();
-        } else {
-            twitter = new TwitterFactory().getInstance();
-            RequestToken requestToken = null;
-            twitter.setOAuthConsumer(Util.CONSUMER_KEY, Util.CONSUMER_SECRET);
-            try {
-                Toast.makeText(this, "getting request token", Toast.LENGTH_SHORT).show();
-                requestToken = twitter.getOAuthRequestToken(Util.CALLBACK_URL);
-                Toast.makeText(this, "redirecting to web view", Toast.LENGTH_SHORT).show();
-                Intent intent = new Intent(this, LoginWebViewActivity.class);
-                intent.putExtra("URL", requestToken.getAuthenticationURL());
-                startActivityForResult(intent, REQUEST_CODE.AUTHORIZATION.ordinal());
-            } catch (TwitterException e) {
-                Toast.makeText(this, "FAIL: " + e.getMessage(), Toast.LENGTH_LONG).show();
-                e.printStackTrace();
-            }
-        }
-        return null;
     }
 
     @Override
@@ -235,6 +186,32 @@ public class MainActivity extends FragmentActivity implements UpdateStatusDialog
         ListView list = (ListView) findViewById(R.id.list_tweets);
         TweetArrayAdapter<Tweet> tweetAdapter = new TweetArrayAdapter<Tweet>(this, tweetList);
         list.setAdapter(tweetAdapter);
+    }
+
+    private Twitter getTwitter() {
+        if (this.twitter == null) {
+            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+            ConfigurationBuilder b = new ConfigurationBuilder();
+            b.setOAuthConsumerKey(Util.CONSUMER_KEY);
+            b.setOAuthConsumerSecret(Util.CONSUMER_SECRET);
+            b.setOAuthAccessToken(prefs.getString(Util.ACCESS_TOKEN, null));
+            b.setOAuthAccessTokenSecret(prefs.getString(Util.ACCESS_TOKEN_SECRET, null));
+            this.twitter = new TwitterFactory(b.build()).getInstance();
+        }
+        return this.twitter;
+    }
+
+    /**
+     * Persist access token and access token secret.
+     * 
+     * @param at
+     */
+    private void storeAccessToken(AccessToken at) {
+        SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
+        SharedPreferences.Editor editor = settings.edit();
+        editor.putString(Util.ACCESS_TOKEN, at.getToken());
+        editor.putString(Util.ACCESS_TOKEN_SECRET, at.getTokenSecret());
+        editor.commit();
     }
 
 }

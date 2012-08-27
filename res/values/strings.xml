@@ -3,10 +3,13 @@
     <string name="app_name">BirdHoot</string>
     <string name="title_activity_main">BirdHoot</string>
     <string name="button_logout">Log out</string>
-    <string name="button_update_status">Crate Tweet!</string>
-    <string name="button_update_status_go">Tweet!</string>
     <string name="title_update_status_dialog">Type your tweet</string>
     <string name="title_search_tweets_dialog">Enter search string</string>
-    <string name="button_search_tweets">Search</string>
+    <string name="button_home_desc">Go to home</string>
+    <string name="button_tweet_desc">Create new tweet!</string>
+    <string name="button_search_desc">Find in tweets</string>
+    <string name="button_logout_desc">Log out</string>
+    
+    <string name="warn_tweet_length_exceeded">Maximum tweet length exceeded, you need to drop {0} characters</string>
 
 </resources>

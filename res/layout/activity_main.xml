@@ -3,49 +3,54 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent" >
 
-    <TextView
+    <ImageButton
+        android:id="@+id/button_home"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_centerHorizontal="true"
-        android:layout_centerVertical="true"
-        tools:context=".MainActivity" />
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentTop="true"
+        android:contentDescription="@string/button_home_desc"
+        android:onClick="onClickHome"
+        android:src="@drawable/ic_menu_home" />
 
-    <Button
+    <ImageButton
+        android:id="@+id/button_tweet"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_toRightOf="@+id/button_home"
+        android:contentDescription="@string/button_tweet_desc"
+        android:onClick="onClickUpdateStatus"
+        android:src="@drawable/ic_menu_tweet" />
+
+    <ImageButton
+        android:id="@+id/button_search"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_toRightOf="@+id/button_tweet"
+        android:contentDescription="@string/button_search_desc"
+        android:onClick="onClickSearchTweets"
+        android:src="@drawable/ic_menu_search" />
+
+    <ImageButton
         android:id="@+id/button_logout"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentRight="true"
         android:layout_alignParentTop="true"
-        android:text="@string/button_logout"
-        android:visibility="invisible"
-        android:onClick="onClickLogout"/>
+        android:contentDescription="@string/button_logout_desc"
+        android:onClick="onClickLogout"
+        android:src="@drawable/ic_menu_exit" />
 
     <ListView
         android:id="@+id/list_tweets"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
-        android:layout_below="@+id/button_logout"
+        android:layout_below="@+id/button_home"
         android:headerDividersEnabled="true" >
 
     </ListView>
-
-    <Button
-        android:id="@+id/button_update_status"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentTop="true"
-        android:onClick="onClickUpdateStatus"
-        android:text="@string/button_update_status" />
-
-    <Button
-        android:id="@+id/button_search_tweets"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"
-        android:layout_toRightOf="@+id/button_update_status"
-        android:onClick="onClickSearchTweets"
-        android:text="@string/button_search_tweets" />
 
 </RelativeLayout>
