@@ -9,6 +9,7 @@
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
         android:layout_alignParentTop="true"
+        android:padding="1dp"
         android:contentDescription="@string/button_home_desc"
         android:onClick="onClickHome"
         android:src="@drawable/ic_menu_home" />
@@ -18,6 +19,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
+        android:padding="1dp"
         android:layout_toRightOf="@+id/button_home"
         android:contentDescription="@string/button_tweet_desc"
         android:onClick="onClickUpdateStatus"
@@ -28,6 +30,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
+        android:padding="1dp"
         android:layout_toRightOf="@+id/button_tweet"
         android:contentDescription="@string/button_search_desc"
         android:onClick="onClickSearchTweets"
@@ -39,6 +42,7 @@
         android:layout_height="wrap_content"
         android:layout_alignParentRight="true"
         android:layout_alignParentTop="true"
+        android:padding="1dp"
         android:contentDescription="@string/button_logout_desc"
         android:onClick="onClickLogout"
         android:src="@drawable/ic_menu_exit" />

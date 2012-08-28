@@ -11,6 +11,7 @@ public class LoginWebViewActivity extends Activity {
     private Intent intent;
 
     public static final String OAUTH_VERIFIER_KEY = "oauth_verifier";
+    public static final String OAUTH_DENIED_KEY = "denied";
     public static final String URL_KEY = "URL";
 
     public void onCreate(Bundle savedInstanceState) {
@@ -28,8 +29,14 @@ public class LoginWebViewActivity extends Activity {
                 if (url.contains(Util.CALLBACK_URL)) {
                     Uri uri = Uri.parse(url);
                     String oauthVerifier = uri.getQueryParameter(OAUTH_VERIFIER_KEY);
-                    intent.putExtra(OAUTH_VERIFIER_KEY, oauthVerifier);
-                    setResult(RESULT_OK, intent);
+                    String denied = uri.getQueryParameter(OAUTH_DENIED_KEY);
+                    if (oauthVerifier != null) {
+                        intent.putExtra(OAUTH_VERIFIER_KEY, oauthVerifier);
+                        setResult(RESULT_OK, intent);
+                    } else if (denied != null) {
+                        intent.putExtra(OAUTH_DENIED_KEY, denied);
+                        setResult(RESULT_CANCELED, intent);
+                    }
                     finish();
                     return true;
                 }
