@@ -4,12 +4,13 @@ import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
 public class LoginWebViewActivity extends Activity {
     private Intent intent;
-
+    private WebView browser;
     public static final String OAUTH_VERIFIER_KEY = "oauth_verifier";
     public static final String OAUTH_DENIED_KEY = "denied";
     public static final String URL_KEY = "URL";
@@ -17,13 +18,17 @@ public class LoginWebViewActivity extends Activity {
     public enum WEBVIEW_REQUEST_CODE {
         AUTHORIZATION
     };
-    
+
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_login);
+        // setContentView(R.layout.activity_login);
         intent = getIntent();
-        WebView webView = (WebView) findViewById(R.id.login_view);
-        webView.setWebViewClient(new WebViewClient() {
+        // WebView browser = (WebView) findViewById(R.id.login_view);
+        browser = new WebView(this);
+        setContentView(browser);
+        browser.getSettings().setCacheMode(WebSettings.LOAD_NO_CACHE);
+        browser.getSettings().setAppCacheEnabled(false);
+        browser.setWebViewClient(new WebViewClient() {
 
             /**
              * If URL to redirect to is callback url then we are done.
@@ -46,7 +51,17 @@ public class LoginWebViewActivity extends Activity {
                 }
                 return false;
             }
+            
+            
         });
-        webView.loadUrl((String) intent.getExtras().get(URL_KEY));
+        browser.loadUrl(intent.getStringExtra(URL_KEY));
+        
+        
+    }
+
+    @Override
+    protected void onStop() {
+        browser.clearCache(true);
+        super.onStop();
     }
 }

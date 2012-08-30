@@ -135,7 +135,6 @@ public class MainActivity extends FragmentActivity implements UpdateStatusDialog
                 updateStatus(text);
                 break;
             case SEARCH_TWEETS:
-                // TODO: Search tweets
                 searchTweets(text);
                 break;
             }
