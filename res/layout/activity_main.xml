@@ -37,14 +37,13 @@
         android:src="@drawable/ic_menu_search" />
 
     <ImageButton
-        android:id="@+id/button_logout"
+        android:id="@+id/button_auth"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentRight="true"
         android:layout_alignParentTop="true"
         android:padding="1dp"
-        android:contentDescription="@string/button_logout_desc"
-        android:onClick="onClickLogout"
+        android:contentDescription="@string/button_auth_desc"
         android:src="@drawable/ic_menu_exit" />
 
     <ListView

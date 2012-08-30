@@ -14,6 +14,10 @@ public class LoginWebViewActivity extends Activity {
     public static final String OAUTH_DENIED_KEY = "denied";
     public static final String URL_KEY = "URL";
 
+    public enum WEBVIEW_REQUEST_CODE {
+        AUTHORIZATION
+    };
+    
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
